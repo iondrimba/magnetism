@@ -1,5 +1,5 @@
 import 'styles/index.css';
-
+import Stats from 'stats.js';
 import {
   radians,
   map,
@@ -9,6 +9,10 @@ import {
 
 export default class App {
   setup() {
+    this.stats = new Stats();
+    this.stats.showPanel(0);
+    document.body.appendChild(this.stats.dom);
+
     this.gui = new dat.GUI();
     this.backgroundColor = '#801336';
     this.gutter = {
@@ -33,7 +37,7 @@ export default class App {
     this.meshes = [];
     this.grid = {
       cols: 40,
-      rows: 20
+      rows: 20,
     };
 
     this.width = window.innerWidth;
@@ -88,14 +92,15 @@ export default class App {
   }
 
   addAmbientLight() {
-    const obj = { color: '#fff'};
+    const obj = { color: '#fff' };
     const light = new THREE.AmbientLight(obj.color, 10);
 
     this.scene.add(light);
   }
 
-  getMesh(geometry, material) {
-    const mesh = new THREE.Mesh(geometry, material);
+  getMesh(geometry, material, count) {
+    const mesh = new THREE.InstancedMesh(geometry, material, count);
+    mesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
 
     mesh.castShadow = true;
     mesh.receiveShadow = true;
@@ -132,7 +137,7 @@ export default class App {
 
     this.addCameraControls();
 
-    this.animate();
+    requestAnimationFrame(this.animate.bind(this));
   }
 
   createGrid() {
@@ -150,7 +155,7 @@ export default class App {
 
     this.topMaterial = new THREE.MeshPhysicalMaterial(this.topMaterialProps);
     this.insideMaterial = new THREE.MeshPhysicalMaterial(this.insideMaterialProps);
-    this.leftMaterial = new THREE.MeshPhysicalMaterial(this.leftMaterialProps);    
+    this.leftMaterial = new THREE.MeshPhysicalMaterial(this.leftMaterialProps);
     const materials = [this.leftMaterial, this.leftMaterial, this.topMaterial, this.insideMaterial, this.insideMaterial, this.insideMaterial];
 
     const gui = this.gui.addFolder('Mesh Material Top');
@@ -168,32 +173,31 @@ export default class App {
       this.leftMaterial.color = hexToRgbTreeJs(color);
     });
 
-    this.groupMesh = new THREE.Object3D();
+    const geometry = new THREE.BoxBufferGeometry(.1, .1, .1);
+    this.mesh = this.getMesh(geometry, materials, this.grid.rows * this.grid.cols);
+    this.scene.add(this.mesh);
+
+    let ii = 0;
+    const centerX = ((this.grid.cols) + ((this.grid.cols) * this.gutter.size)) * .46;
+    const centerZ = ((this.grid.rows) + ((this.grid.rows) * this.gutter.size)) * .46;
 
     for (let row = 0; row < this.grid.rows; row++) {
       this.meshes[row] = [];
 
       for (let col = 0; col < this.grid.cols; col++) {
-        const geometry = new THREE.BoxBufferGeometry(.1, .1, .1);
-        const mesh = this.getMesh(geometry, materials);
         const pivot = new THREE.Object3D();
-        
-        mesh.position.y = .05;
+
         pivot.scale.set(1, 0.001, 1);
-        pivot.add(mesh);
-        pivot.position.set(col + (col * this.gutter.size), 0, row + (row * this.gutter.size));
+        pivot.position.set(col + (col * this.gutter.size)-centerX, .1, row + (row * this.gutter.size)-centerZ);
 
         this.meshes[row][col] = pivot;
-        this.groupMesh.add(pivot);
+        pivot.updateMatrix();
+
+        this.mesh.setMatrixAt(ii++, pivot.matrix);
       }
     }
 
-    const centerX = ((this.grid.cols) + ((this.grid.cols) * this.gutter.size)) * .46;
-    const centerZ = ((this.grid.rows) + ((this.grid.rows) * this.gutter.size)) * .46;
-
-    this.groupMesh.position.set(-centerX, 0, -centerZ);
-
-    this.scene.add(this.groupMesh);
+    this.mesh.instanceMatrix.needsUpdate = true;
   }
 
   draw() {
@@ -204,24 +208,35 @@ export default class App {
     this.pendulum.angle += this.pendulum.angleVelocity;
     this.sphere.position.set(this.pendulum.current.x, this.pendulum.current.y + 3.6, 0);
 
+    let ii = 0;
     for (let row = 0; row < this.grid.rows; row++) {
       for (let col = 0; col < this.grid.cols; col++) {
 
-        const mesh = this.meshes[row][col];
-        const dist = distance(this.sphere.position.x, this.sphere.position.z, mesh.position.x + this.groupMesh.position.x, mesh.position.z + this.groupMesh.position.z);
-        const y = map(dist, .6, 0.001, 0, 90 * dist);
+        const pivot = this.meshes[row][col];
+        const dist = distance(this.sphere.position.x, this.sphere.position.z, pivot.position.x, pivot.position.z  );
+        const y = map(dist, .6, 0.001, 0, 180 * dist);
 
-        gsap.to(mesh.scale, .2, { y: y < 0.001 ? 0.001 : y });
+        gsap.to(pivot.scale, .2, { y: y < 0.001 ? 0.001 : y });
+
+        pivot.updateMatrix();
+
+        this.mesh.setMatrixAt(ii++, pivot.matrix);
       }
     }
+
+    this.mesh.instanceMatrix.needsUpdate = true;
   }
 
   animate() {
+    this.stats.begin();
+
     this.controls.update();
 
     this.draw();
 
     this.renderer.render(this.scene, this.camera);
+
+    this.stats.end();
 
     requestAnimationFrame(this.animate.bind(this));
   }

@@ -101,7 +101,6 @@ export default class App {
   getMesh(geometry, material, count) {
     const mesh = new THREE.InstancedMesh(geometry, material, count);
     mesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
-
     mesh.castShadow = true;
     mesh.receiveShadow = true;
 
@@ -174,6 +173,7 @@ export default class App {
     });
 
     const geometry = new THREE.BoxBufferGeometry(.1, .1, .1);
+    geometry.translate( 0, .025, 0 );
     this.mesh = this.getMesh(geometry, materials, this.grid.rows * this.grid.cols);
     this.scene.add(this.mesh);
 
@@ -188,9 +188,9 @@ export default class App {
         const pivot = new THREE.Object3D();
 
         pivot.scale.set(1, 0.001, 1);
-        pivot.position.set(col + (col * this.gutter.size)-centerX, .1, row + (row * this.gutter.size)-centerZ);
-
+        pivot.position.set(col + (col * this.gutter.size)-centerX, 0, row + (row * this.gutter.size)-centerZ);
         this.meshes[row][col] = pivot;
+
         pivot.updateMatrix();
 
         this.mesh.setMatrixAt(ii++, pivot.matrix);
@@ -214,8 +214,7 @@ export default class App {
 
         const pivot = this.meshes[row][col];
         const dist = distance(this.sphere.position.x, this.sphere.position.z, pivot.position.x, pivot.position.z  );
-        const y = map(dist, .6, 0.001, 0, 180 * dist);
-
+        const y = map(dist, .6, 0.001, 0, 140 * dist);
         gsap.to(pivot.scale, .2, { y: y < 0.001 ? 0.001 : y });
 
         pivot.updateMatrix();

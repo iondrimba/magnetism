@@ -67,7 +67,7 @@ export default class App {
 
   addSphere() {
     const meshParams = {
-      color: '#f9b60c',
+      color: '#fff400',
     };
 
     const geometry = new THREE.SphereGeometry(.3, 32, 32);
@@ -93,7 +93,7 @@ export default class App {
 
   addAmbientLight() {
     const obj = { color: '#fff' };
-    const light = new THREE.AmbientLight(obj.color, 10);
+    const light = new THREE.AmbientLight(obj.color, 1);
 
     this.scene.add(light);
   }
@@ -141,15 +141,15 @@ export default class App {
 
   createGrid() {
     this.topMaterialProps = {
-      color: '#42070f',
+      color: '#ff214a',
     };
 
     this.insideMaterialProps = {
-      color: '#07041c',
+      color: '#190d6d',
     };
 
     this.leftMaterialProps = {
-      color: '#51ff00',
+      color: '#fff400',
     };
 
     this.topMaterial = new THREE.MeshPhysicalMaterial(this.topMaterialProps);

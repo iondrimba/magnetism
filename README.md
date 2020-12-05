@@ -1,6 +1,6 @@
 # 🧲 Magnetism
 
-[![Build Status](https://travis-ci.org/iondrimba/magnetism.svg?branch=master)](https://travis-ci.org/iondrimba/magnetism) [![Dependabot Status](https://api.dependabot.com/badges/status?host=github&repo=iondrimba/magnetism)](https://dependabot.com)
+![Node.js CI](https://github.com/iondrimba/magnetism/workflows/Node.js%20CI/badge.svg)
 
 ![Image Title](https://raw.githubusercontent.com/iondrimba/images/master/magnetism.gif)
 

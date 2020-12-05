@@ -1,5 +1,6 @@
 const webpack = require('webpack');
 const path = require('path');
+const CopyPlugin = require("copy-webpack-plugin");
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const { CleanWebpackPlugin } = require('clean-webpack-plugin');
 
@@ -33,7 +34,17 @@ module.exports = {
         NODE_ENV: JSON.stringify(process.env.NODE_ENV)
       }
     }),
-    new CleanWebpackPlugin({ cleanOnceBeforeBuildPatterns: ['public'] }),
+    new CleanWebpackPlugin({
+      cleanOnceBeforeBuildPatterns: ['app.*'],
+    }),
+    new CopyPlugin({
+      patterns: [
+        { from: "./src/scripts/vendor/three.r123.min.js", to: "three.r123.min.js" },
+        { from: "./src/scripts/vendor/OrbitControls.js", to: "OrbitControls.js" },
+        { from: "./src/scripts/vendor/dat.0.7.2.gui.js", to: "dat.0.7.2.gui.js" },
+        { from: "./src/scripts/vendor/gsap.3.0.2.min.js", to: "gsap.3.0.2.min.js" },
+      ],
+    }),
     new HtmlWebpackPlugin({
       filename: 'index.html',
       template: 'src/index.html'

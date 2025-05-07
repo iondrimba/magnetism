@@ -9,6 +9,9 @@ import {
 
 export default class App {
   setup() {
+    this.targetFPS = 60;
+    this.frameInterval = 1000 / this.targetFPS; // milliseconds per frame
+    this.lastFrameTime = 0;
     this.stats = new Stats();
     this.stats.showPanel(0);
     document.body.appendChild(this.stats.dom);
@@ -226,17 +229,23 @@ export default class App {
     this.mesh.instanceMatrix.needsUpdate = true;
   }
 
-  animate() {
+  animate(currentTime = 0) {
     this.stats.begin();
-
     this.controls.update();
 
-    this.draw();
+    const timeElapsed = currentTime - this.lastFrameTime;
+
+    // Only run animation logic if enough time has passed
+    if (timeElapsed >= this.frameInterval) {
+      // Update lastFrameTime, accounting for the actual time passed
+      // This prevents timing drift
+      this.lastFrameTime = currentTime - (timeElapsed % this.frameInterval);
+
+      this.draw();
+    }
 
     this.renderer.render(this.scene, this.camera);
-
     this.stats.end();
-
     requestAnimationFrame(this.animate.bind(this));
   }
 }
